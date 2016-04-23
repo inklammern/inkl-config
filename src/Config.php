@@ -20,7 +20,7 @@ class Config implements ConfigInterface
 	{
 		$handler = $this->getHandler($path);
 
-		return $handler->set($this->getKeyFromPath($path));
+		return $handler->set($this->getKeyFromPath($path), $value);
 	}
 
 
@@ -53,7 +53,7 @@ class Config implements ConfigInterface
 
 	private function getKeyFromPath($path)
 	{
-		return current(end(explode('/', $path, 2)));
+		return end(explode('/', $path, 2));
 	}
 
 }

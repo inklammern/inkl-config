@@ -25,6 +25,10 @@ class DbHandler implements HandlerInterface
 	 */
 	private $valueColumn;
 
+	private $isLoaded = false;
+
+	private $config = [];
+
 	/**
 	 * PhpArrayHandler constructor.
 	 * @param PDO $pdo
@@ -47,10 +51,9 @@ class DbHandler implements HandlerInterface
 		INSERT INTO 
 			'.  $this->table . ' 
 		SET 
-			' . $this->valueColumn . '=:value 
-		WHERE 
-		' . $this->keyColumn = ':key 
-		ON DUPLICATE KEY ' . $this->valueColumn . '=:value
+			`' . $this->keyColumn . '`=:key,
+			`' . $this->valueColumn . '`=:value 			 
+		ON DUPLICATE KEY UPDATE `' . $this->valueColumn . '`=:value
 		;');
 
 		return $statement->execute([
@@ -62,22 +65,37 @@ class DbHandler implements HandlerInterface
 
 	public function get($key, $default = null)
 	{
-
-		$statement = $this->pdo->prepare('
-		SELECT 
-			' . $this->valueColumn . ' 
-		FROM 
-			' . $this->table . ' 
-		WHERE 
-			' . $this->keyColumn . '=:key
-		;');
-
-		if ($column =$statement->fetchColumn())
+		if (!$this->isLoaded)
 		{
-			return $column;
+			$this->load();
+		}
+
+		if (array_key_exists($key, $this->config))
+		{
+			return $this->config[$key];
 		}
 
 		return $default;
+	}
+
+
+	private function load()
+	{
+		$statement = $this->pdo->prepare('
+		SELECT
+			*
+		FROM
+			' . $this->table . ';
+		;');
+		$statement->execute();
+
+		$this->config = [];
+		while ($data = $statement->fetch(PDO::FETCH_ASSOC))
+		{
+			$this->config[$data[$this->keyColumn]] = $data[$this->valueColumn];
+		}
+
+		$this->isLoaded = true;
 	}
 
 }
