@@ -49,7 +49,7 @@ class DbHandler implements HandlerInterface
 	{
 		$statement = $this->pdo->prepare('
 		INSERT INTO 
-			'.  $this->table . ' 
+			`'.  $this->table . '` 
 		SET 
 			`' . $this->keyColumn . '`=:key,
 			`' . $this->valueColumn . '`=:value 			 
@@ -83,9 +83,9 @@ class DbHandler implements HandlerInterface
 	{
 		$statement = $this->pdo->prepare('
 		SELECT
-			*
+			`' . $this->keyColumn . '`, `' . $this->valueColumn . '`
 		FROM
-			' . $this->table . ';
+			`' . $this->table . '`;
 		;');
 		$statement->execute();
 
