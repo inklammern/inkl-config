@@ -56,10 +56,12 @@ class DbHandler implements HandlerInterface
 		ON DUPLICATE KEY UPDATE `' . $this->valueColumn . '`=:value
 		;');
 
-		return $statement->execute([
+		$statement->execute([
 			'key' => $key,
 			'value' => $value
 		]);
+
+		$this->config[$key] = $value;
 	}
 
 
