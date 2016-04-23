@@ -1,0 +1,17 @@
+{
+	"name": "inkl/config",
+	"description": "read and write config values with different loaders",
+	"license": "MIT",
+	"authors": [{
+		"name": "Marcus",
+		"email": ""
+	}],
+	"require": {
+		"php": ">= 5.5"
+	},
+	"autoload": {
+		"psr-4": {
+			"Inkl\\Config\\": "src/"
+		}
+	}
+}
