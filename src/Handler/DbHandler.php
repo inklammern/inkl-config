@@ -28,6 +28,8 @@ class DbHandler implements HandlerInterface
 	private $isLoaded = false;
 
 	private $config = [];
+	/** @var */
+	private $expireColumn;
 
 	/**
 	 * PhpArrayHandler constructor.
@@ -35,33 +37,50 @@ class DbHandler implements HandlerInterface
 	 * @param string $table
 	 * @param string $keyColumn
 	 * @param string $valueColumn
+	 * @param $expireColumn
 	 */
-	public function __construct(PDO $pdo, $table, $keyColumn, $valueColumn)
+	public function __construct(PDO $pdo, $table, $keyColumn, $valueColumn, $expireColumn)
 	{
 		$this->pdo = $pdo;
 		$this->table = $table;
 		$this->keyColumn = $keyColumn;
 		$this->valueColumn = $valueColumn;
+		$this->expireColumn = $expireColumn;
 	}
 
 
-	public function set($key, $value)
+	public function set($key, $value, $expireSeconds = null)
 	{
 		$statement = $this->pdo->prepare('
 		INSERT INTO 
 			`'.  $this->table . '` 
 		SET 
 			`' . $this->keyColumn . '`=:key,
-			`' . $this->valueColumn . '`=:value 			 
-		ON DUPLICATE KEY UPDATE `' . $this->valueColumn . '`=:value
+			`' . $this->valueColumn . '`=:value,		 
+			`' . $this->expireColumn . '`=:expire 		 
+		ON DUPLICATE KEY UPDATE `' . $this->valueColumn . '`=:value, `' . $this->expireColumn . '`=:expire
 		;');
 
 		$statement->execute([
 			'key' => $key,
-			'value' => $value
+			'value' => $value,
+			'expire' => $this->calcExpire($expireSeconds)
 		]);
 
 		$this->config[$key] = $value;
+	}
+
+
+	private function calcExpire($expireSeconds)
+	{
+		if (is_null($expireSeconds))
+		{
+			return null;
+		}
+
+		return (new \DateTime())
+			->modify(sprintf('+%d SECONDS', $expireSeconds))
+			->format('Y-m-d H:i:s');
 	}
 
 
@@ -83,11 +102,13 @@ class DbHandler implements HandlerInterface
 
 	private function load()
 	{
+		$this->deleteExpired();
+
 		$statement = $this->pdo->prepare('
 		SELECT
 			`' . $this->keyColumn . '`, `' . $this->valueColumn . '`
 		FROM
-			`' . $this->table . '`;
+			`' . $this->table . '`
 		;');
 		$statement->execute();
 
@@ -98,6 +119,21 @@ class DbHandler implements HandlerInterface
 		}
 
 		$this->isLoaded = true;
+	}
+
+
+	private function deleteExpired()
+	{
+		$statement = $this->pdo->prepare('
+		DELETE FROM
+			`' . $this->table . '` 
+		WHERE 
+			`' . $this->expireColumn . '` IS NOT NULL AND `' . $this->expireColumn . '`<=:now
+		;');
+		$statement->execute([
+			'now' => (new \DateTime())->format('Y-m-d H:i:s')
+		]);
+
 	}
 
 }

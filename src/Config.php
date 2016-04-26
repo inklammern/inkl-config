@@ -10,22 +10,17 @@ class Config implements ConfigInterface
 {
 	private $handlers = [];
 
-	public function addHandler($namespace, $handler)
+	public function addHandler($namespace, HandlerInterface $handler)
 	{
-		if (!($handler instanceof HandlerInterface) && !($handler instanceof \Closure))
-		{
-			throw new \Exception('handler must be instance of HandlerInterface or Closure');
-		}
-
 		$this->handlers[$namespace] = $handler;
 	}
 
 
-	public function set($path, $value)
+	public function set($path, $value, $expireSeconds = null)
 	{
 		$handler = $this->getHandler($path);
 
-		return $handler->set($this->getKeyFromPath($path), $value);
+		return $handler->set($this->getKeyFromPath($path), $value, $expireSeconds);
 	}
 
 
@@ -44,16 +39,6 @@ class Config implements ConfigInterface
 		if (!isset($this->handlers[$namespace]))
 		{
 			throw new Exception(sprintf('no handler for namespace "%s"', $namespace));
-		}
-
-		if ($this->handlers[$namespace] instanceof \Closure)
-		{
-			$this->handlers[$namespace] = $this->handlers[$namespace]();
-
-			if (!($this->handlers[$namespace] instanceof HandlerInterface))
-			{
-				throw new \Exception('handler must be instance of HandlerInterface');
-			}
 		}
 
 		return $this->handlers[$namespace];

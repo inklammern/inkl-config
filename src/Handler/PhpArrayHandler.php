@@ -21,9 +21,9 @@ class PhpArrayHandler implements HandlerInterface
 		$this->config = $config;
 	}
 
-	public function set($key, $value)
+	public function set($key, $value, $expireSeconds = null)
 	{
-		throw new \Exception(sprintf('the key "%s" is handled by a php array and is not writeable'));
+		throw new \Exception(sprintf('keys handled by php arrays are not writeable'));
 	}
 
 
