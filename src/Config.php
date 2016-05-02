@@ -47,13 +47,15 @@ class Config implements ConfigInterface
 
 	private function getNamespaceFromPath($path)
 	{
-		return current(explode('/', $path, 2));
+		$pathData = explode('/', $path, 2);
+		return current($pathData);
 	}
 
 
 	private function getKeyFromPath($path)
 	{
-		return end(explode('/', $path, 2));
+		$pathData = explode('/', $path, 2);
+		return end($pathData);
 	}
 
 }
